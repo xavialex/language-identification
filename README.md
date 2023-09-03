@@ -38,6 +38,20 @@ After that, run the service with:
 
 `$ uvicorn app.main:app --reload`
 
+## Data
+
+The dataset generation logic is in *src/data*. The script *make_dataset.py* takes a dataset from the [HF Hub](https://huggingface.co/datasets/strombergnlp/nordic_langid) with samples in the languages of interest and saves it (or not) for future use. It can be run as a Python module with:
+
+`python -m src.data.make_dataset`
+
+## Training
+
+The model training relies on a simple Transformer Encoder architecture implemented in PyTorch. It'll handle the dataset creation on its own regardless its presence locally. It can be run as a Python module with:
+
+`python -m src.models.train_model`
+
+It'll generate a model in a given location. All the parameters are configured within the *src/models/train_model.py* script.
+
 ## Inference process
 
 With the service running, it can be tested within the automatically generated documentation in *http://localhost:8000/docs*. The request requires one or several text strings: Once processed, it'll return a JSON response with the structure:
