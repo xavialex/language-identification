@@ -3,9 +3,8 @@ from typing import Annotated
 import uvicorn
 from fastapi import FastAPI, Query
 import torch
-from transformers import pipeline
 
-from src.models.train_model import vocab, tokenizer, model
+from src.models.train_model import model
 from src.models.predict_model import text_preprocessing
 from src.models.predict_model import LABEL_TO_LANGUAGE
 
@@ -30,7 +29,6 @@ async def language_identification(
     """
     texts_tensor = [] 
     for text in texts:
-        print(text)
         texts_tensor.append(text_preprocessing(text))
     texts_tensor = torch.stack(texts_tensor)
     labels = model(texts_tensor).argmax(1).tolist()

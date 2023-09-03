@@ -112,7 +112,7 @@ num_layers = 2
 dropout = 0.1
 num_epochs = 1
 learning_rate = 2e-5
-model_save_name = None #'language_identification_classifier.pth'
+model_save_name = 'language_identification_classifier.pth'
 
 model = TransformerClassifier(input_dim, hidden_dim, output_dim, num_heads, num_layers, dropout)
 

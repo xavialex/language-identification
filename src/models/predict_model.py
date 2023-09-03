@@ -25,14 +25,24 @@ def text_preprocessing(text: str) -> Tensor:
 
 
 def main():
-    model_path  ='classification_model2.pth'
+    model_path = 'models/language_identification_classifier.pth'
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
 
-    text = "This is a sample test"
-    encoding = text_preprocessing(text)
-    label = model(encoding).argmax(1)
-    print(f"Identified language for '{text}': {label}")
+    input = []
+    samples = [
+        "jackson er anerkjent som den mest suksessrike artisten gjennom tidene av guinness world records og er blitt betegnet som kongen av pop", 
+        "gróa var den norrøne gro den gammaldanske og groa den gammalsvenske forma av namnet", 
+        "efter et par år at have været underofficer blev han fænrik ved"	
+        ]
+    for text in samples:
+        input.append(text_preprocessing(text))
+    input = torch.stack(input)
+    labels = model(input).argmax(1).tolist()
+    labels = [LABEL_TO_LANGUAGE.get(label) for label in labels]
+    output = {sample: label for sample, label in zip(samples, labels)}
+    for sample, label in output.items():
+        print(f"Identified language for '{sample}': {label}")
 
 
 if __name__ == '__main__':
