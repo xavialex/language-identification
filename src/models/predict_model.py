@@ -34,6 +34,7 @@ def main():
     label = model(encoding).argmax(1)
     print(f"Identified language for '{text}': {label}")
 
+
 if __name__ == '__main__':
     main()
     

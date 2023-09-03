@@ -75,6 +75,13 @@ curl -X 'POST' \
   -d ''
 ```
 
+## Conclusions and Next Steps
+
+This is a sample project to showcase a PyTorch implementation from zero in the shortest amount of time. Improvement of the projects results can be tackled argeting every area of the ML lifecycle:
+* **Data:** The dataset is small (10k variant instead of 50k) to avoid longer training. Furthermore, additional languages can be added to make the model more broad.
+* **Modeling:** The model is created from zero. For text classification tasks, there's a wide variety af pretrained models with great results available to finetune, which would improve model's performance and speed training time (depending on the model of choice). Also, advanced frameworks allow to keep track of experiments, data and model versioning, etc.
+* **Inference:** The trained model is used in FastAPI for inference on a GPU (if available). To speed it up, specific Deep Learning (DL) inference engines like Triton may be more suitable. There's also the possibility to perform model quantization, distillation, conversion to other formats (ONNX -> TensorRT for NVIDIA) to reduce even more the inference time.
+
 ## References
 
 * [LANGUAGE MODELING WITH NN.TRANSFORMER AND TORCHTEXT](https://pytorch.org/tutorials/beginner/transformer_tutorial.html)
