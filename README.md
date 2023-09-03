@@ -6,25 +6,17 @@ This project aims to create a Language Identification system for the following l
 
 The service is offered in a docker image that can be built with:
 
-`$ docker build -t yolos_object_detection .`
+`$ docker build -t language-identification .`
 
-Once the images are built, run the solution with:
+or directly pulled from [Docker Hub]:
 
-`$ docker compose up`
+`$ docker pull xavialex/language-identification`
+
+Once the image is built, run a container with:
+
+`$ docker run -p 80:80 --rm --gpus all --name lang_id language-identification`
 
 **Note:** This docker image assumes deployment in servers with NVIDIA hardware available.
-
-### FastAPI service
-
-Available through *localhost:8000*. The service can be tried through the documentation in *localhost:8000/docs*. There are two endpoints:  
-* **train-speech-emotion-recognition-model/:** Trains a model and saves it to a new location (*models/ser_model* by default). If altered, change the model loading in *app/main.py*.  
-* **speech-emotion-recognition:** Inference process for the model located in *models/ser_model*. More information in the More information in the [inference section](## Inference process).
-
-**Important note:** To make the *.zip* deliverable manageable, the necessary model needed for the FastAPI service that should be located in */models/ser_model/* is not included. For the service to work, download it from the link provided or use the Jupyter service or the local code to recreate it, since the */models/* volume is sharable across devices.
-
-### Jupyter service
-
-Available through *localhost:8888*. The notebook of interest is in the *notebooks/* folder. It contains the same logic as the rest of the project with explanations and simplifications to showcase certain aspects of the development of the project.
 
 ## Running locally
 
@@ -48,15 +40,25 @@ After that, run the service with:
 
 ## Inference process
 
-With the service running, it can be tested within the automatically generated documentation in *http://localhost:8000/docs*. The request requires one or several WAV audio files. The model will output the detected labels alongside their corresponding confidences. A sample CURL request is shown below:
+With the service running, it can be tested within the automatically generated documentation in *http://localhost:8000/docs*. The request requires one or several text strings: Once processed, it'll return a JSON response with the structure:
+
+```json
+[
+    {
+        "my first string": "Identified Language",
+        "my second string": "Identified Language"
+        . . . 
+    }
+]
+```
+
+Requests may be generated with curl:
 
 ```bash
 curl -X 'POST' \
-  'http://127.0.0.1:8000/speech-emotion-recognition/' \
+  'http://127.0.0.1:8000/language-identification/?texts=mytext1&texts=mytext2' \
   -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'files=@03a01Fa.wav;type=audio/wav' \
-  -F 'files=@03a01Nc.wav;type=audio/wav'
+  -d ''
 ```
 
 
