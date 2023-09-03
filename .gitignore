@@ -1,0 +1,6 @@
+/.vscode
+/classification_model.pth
+/classification_model2.pth
+/hf_dataset
+/models
+/venv
