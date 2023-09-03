@@ -4,7 +4,7 @@ from pathlib import Path
 
 from datasets import load_from_disk
 import torch
-import torch.nn as nn
+from torch import nn, Tensor
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.dataset import random_split
@@ -33,23 +33,31 @@ class TransformerClassifier(nn.Module):
         logits = self.fc(pooled)
         return logits
 
+        
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, dropout):
-        super(PositionalEncoding, self).__init__()
-        self.dropout = nn.Dropout(dropout)
-        pe = torch.zeros(1000, d_model)
-        position = torch.arange(0, 1000, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model))
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0)
+
+    def __init__(self, d_model: int, dropout: float=0.1, max_len: int=5000):
+        super().__init__()
+        self.dropout = nn.Dropout(p=dropout)
+
+        position = torch.arange(max_len).unsqueeze(1)
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2) 
+            * (-math.log(10000.0) / d_model))
+        pe = torch.zeros(max_len, 1, d_model)
+        pe[:, 0, 0::2] = torch.sin(position * div_term)
+        pe[:, 0, 1::2] = torch.cos(position * div_term)
         self.register_buffer('pe', pe)
 
-    def forward(self, x):
-        x = x + self.pe[:, :x.size(1)]
+    def forward(self, x: Tensor) -> Tensor:
+        """
+        Arguments:
+            x: Tensor, shape ``[seq_len, batch_size, embedding_dim]``
+        """
+        x = x + self.pe[:x.size(0)]
         return self.dropout(x)
 
-# Define custom dataset
+
 class CustomDataset(Dataset):
     def __init__(self, data, tokenizer, max_len):
         self.data = data
@@ -102,9 +110,9 @@ output_dim = len(train_data.features['language'].names)  # Number of classes
 num_heads = 4
 num_layers = 2
 dropout = 0.1
-num_epochs = 10
+num_epochs = 1
 learning_rate = 2e-5
-model_save_name = 'language_identification_classifier.pth'
+model_save_name = None #'language_identification_classifier.pth'
 
 model = TransformerClassifier(input_dim, hidden_dim, output_dim, num_heads, num_layers, dropout)
 
@@ -199,9 +207,10 @@ def main():
     accu_test = evaluate(test_dataloader)
     print(f"Test accuracy {accu_test:8.3f}")
 
-    Path('models/').mkdir(parents=True, exist_ok=True)
-    torch.save(model.state_dict(), f"models/{model_save_name}")
-    print(f"Model saved in {model_save_name}")
+    if model_save_name is not None:
+        Path('models/').mkdir(parents=True, exist_ok=True)
+        torch.save(model.state_dict(), f"models/{model_save_name}")
+        print(f"Model saved in {model_save_name}")
 
 
 if __name__ == '__main__':
