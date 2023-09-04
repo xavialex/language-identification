@@ -6,15 +6,16 @@ from datasets import load_from_disk
 import torch
 from torch import nn, Tensor
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from torch.utils.data.dataset import random_split
-from torchtext.data.utils import get_tokenizer
-from torchtext.vocab import build_vocab_from_iterator
+
 
 from src.data.make_dataset import make_dataset
+from src.data.dataloader_utils import make_train_val_split_dataloaders
+from src.data.dataloader_utils import make_test_dataloader
+from src.data.dataloader_utils import get_tokenizer_vocab
 
 
 class TransformerClassifier(nn.Module):
+
     def __init__(self, input_dim, hidden_dim, output_dim, num_heads, num_layers, dropout):
         super(TransformerClassifier, self).__init__()
         self.embedding = nn.Embedding(input_dim, hidden_dim)
@@ -58,27 +59,6 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 
-class CustomDataset(Dataset):
-    def __init__(self, data, tokenizer, max_len):
-        self.data = data
-        self.tokenizer = tokenizer
-        self.max_len = max_len
-
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        text = self.data[idx]['sentence']
-        label = self.data[idx]['language']
-        encoding = vocab(tokenizer(text))
-        if len(encoding) < max_len:
-            encoding = encoding + [0] * (max_len - len(encoding))
-        else:
-            encoding = encoding[:max_len]
-        input_ids = torch.tensor(encoding)
-        return {'input_ids': input_ids, 'label': label}
-
-
 # Set random seed
 torch.manual_seed(42)
 
@@ -92,42 +72,27 @@ train_data = hf_dataset['train']
 test_data = hf_dataset['test']
 
 # Initialize tokenizer and vocab
-def yield_tokens(data_iter):
-    for text in data_iter:
-        yield tokenizer(text['sentence'])
-
-tokenizer = get_tokenizer(tokenizer=None)
-vocab = build_vocab_from_iterator(yield_tokens(train_data), specials=['<unk>'])
-vocab.set_default_index(vocab["<unk>"])
+tokenizer, vocab = get_tokenizer_vocab(train_data)
 
 # Define hyperparameters
 max_len = 512
 batch_size = 16
-max_length = 128
 input_dim = len(vocab) 
 hidden_dim = 128
 output_dim = len(train_data.features['language'].names)  # Number of classes
 num_heads = 4
 num_layers = 2
 dropout = 0.1
-num_epochs = 1
+num_epochs = 100
 learning_rate = 2e-5
 model_save_name = 'language_identification_classifier.pth'
 
 model = TransformerClassifier(input_dim, hidden_dim, output_dim, num_heads, num_layers, dropout)
 
 # Prepare the data
-train_dataset = CustomDataset(train_data, tokenizer, max_len)
-test_dataset = CustomDataset(test_data, tokenizer, max_len)
-num_train = int(len(train_dataset) * 0.95)
-split_train_, split_valid_ = random_split(
-    train_dataset, [num_train, len(train_dataset) - num_train])
-train_dataloader = DataLoader(
-    split_train_, batch_size=batch_size, shuffle=True)
-valid_dataloader = DataLoader(
-    split_valid_, batch_size=batch_size, shuffle=True)
-test_dataloader = DataLoader(
-    test_dataset, batch_size=batch_size, shuffle=True)
+train_dataloader, valid_dataloader = make_train_val_split_dataloaders(
+    train_data, tokenizer, vocab, max_len, batch_size, split_ratio=0.95)
+test_dataloader = make_test_dataloader(test_data, tokenizer, vocab, max_len, batch_size)
 
 # Define loss function and optimizer
 criterion = nn.CrossEntropyLoss()
@@ -166,7 +131,7 @@ def train(dataloader, epoch):
             ms_per_batch = (time.time() - start_time) * 1000 / log_interval
             print(f"| epoch {epoch:3d} | {idx:5d}/{len(dataloader):5d} batches "
                   f"| loss {cur_loss:5.2f} | accuracy {acc:8.3f} " 
-                  f"| lr {lr:02.5f} | ms/batch {ms_per_batch:5.2f}")
+                  f"| lr {lr:02.6f} | ms/batch {ms_per_batch:5.2f}")
             total_loss, total_acc, total_count = 0., 0., 0.
             start_time = time.time()
 
