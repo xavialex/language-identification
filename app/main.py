@@ -12,7 +12,7 @@ from src.models.predict_model import LABEL_TO_LANGUAGE
 app = FastAPI()
 # Model initialization
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model_path  ='classification_model2.pth'
+model_path = 'models/language_identification_classifier.pth'
 model.load_state_dict(torch.load(model_path, map_location=device))
 model.eval()
 
