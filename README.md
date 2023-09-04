@@ -8,7 +8,7 @@ The service is offered in a docker image that can be built with:
 
 `$ docker build -t language-identification .`
 
-or directly pulled from [Docker Hub]:
+or directly pulled from [Docker Hub](https://hub.docker.com/repository/docker/xavialex/language-identification/general):
 
 `$ docker pull xavialex/language-identification`
 
